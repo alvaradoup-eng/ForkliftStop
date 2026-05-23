@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Seguridad Montacargas</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1E3A8A">
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: system-ui, 'Segoe UI', sans-serif;
+        }
+        body {
+            background: #f0f4f8;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        /* Pantalla de carga (splash screen) */
+        .splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+        }
+        
+        .splash-contenido {
+            text-align: center;
+            animation: fadeInUp 0.8s ease;
+        }
+        
+        .splash-logo {
+            width: 150px;
+            height: 150px;
+            margin: 30px auto 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        /* Efecto de rayo de luz que pasa por el logo */
+        .splash-logo::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, 
+                transparent, 
+                rgba(255, 255, 255, 0.6), 
+                transparent);
+            animation: rayo 2s ease-in-out infinite;
+            z-index: 10;
+            pointer-events: none;
+            border-radius: 30px;
+        }
+        
+        /* Efecto de rayo de luz para el texto */
+        .splash-texto-container {
+            position: relative;
+            display: inline-block;
+            overflow: hidden;
+        }
+        
+        .splash-texto {
+            color: #1e3a8a;
+            font-size: 1.8rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+            position: relative;
+            display: inline-block;
+        }
+        
+        .splash-texto-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, 
+                transparent, 
+                rgba(30, 58, 138, 0.3), 
+                transparent);
+            animation: rayoTexto 2.5s ease-in-out infinite;
+            z-index: 2;
+            pointer-events: none;
+        }
+        
+        .splash-cargando {
+            margin-top: 30px;
+            width: 40px;
+            height: 40px;
+            border: 3px solid #e0e7ff;
+            border-top-color: #1e3a8a;
+            border-radius: 50%;
+            animation: girar 1s linear infinite;
+            display: inline-block;
+        }
+        
+        @keyframes rayo {
+            0% {
+                left: -100%;
+            }
+            20% {
+                left: 100%;
+            }
+            100% {
+                left: 100%;
+            }
+        }
+        
+        @keyframes rayoTexto {
+            0% {
+                left: -100%;
+            }
+            20% {
+                left: 100%;
+            }
+            100% {
+                left: 100%;
+            }
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes girar {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        
+        /* Contenido principal (oculto inicialmente) */
+        .container {
+            max-width: 650px;
+            margin: auto;
+            background: white;
+            border-radius: 32px;
+            padding: 24px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        
+        .container.visible {
+            opacity: 1;
+        }
+        
+        h1 {
+            font-size: 1.5rem;
+            color: #1e3a8a;
+            text-align: center;
+            margin-top: 0;
+        }
+        label {
+            font-weight: 600;
+            display: block;
+            margin-top: 14px;
+            margin-bottom: 6px;
+        }
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border-radius: 16px;
+            border: 1px solid #ccc;
+            font-size: 1rem;
+        }
+        
+        input::placeholder {
+            color: #999;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #1e3a8a;
+            box-shadow: 0 0 0 2px rgba(30,58,138,0.2);
+        }
+        
+        button {
+            margin-top: 24px;
+            width: 100%;
+            background: #1e3a8a;
+            color: white;
+            border: none;
+            padding: 14px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 40px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #2e4a9e;
+        }
+        .resultado {
+            margin-top: 24px;
+            background: #e6f0ff;
+            padding: 16px;
+            border-radius: 24px;
+        }
+        .card {
+            margin-bottom: 16px;
+            background: white;
+            border-radius: 16px;
+            padding: 14px;
+            border-left: 5px solid #1e3a8a;
+        }
+        .valor {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #1e3a8a;
+            margin: 8px 0;
+        }
+        .valor-inicial {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #999;
+            margin: 8px 0;
+        }
+        .advertencia {
+            color: #d32f2f;
+            font-weight: bold;
+        }
+        footer {
+            font-size: 11px;
+            text-align: center;
+            margin-top: 24px;
+            color: gray;
+        }
+        .nota {
+            font-size: 0.75rem;
+            color: #666;
+            margin-top: 8px;
+            text-align: center;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .modal-contenido {
+            background-color: white;
+            margin: 30% auto;
+            padding: 24px;
+            width: 85%;
+            max-width: 350px;
+            border-radius: 32px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            animation: slideUp 0.3s ease;
+        }
+        
+        .modal-contenido h3 {
+            color: #1e3a8a;
+            margin-top: 0;
+            font-size: 1.4rem;
+        }
+        
+        .modal-resultado {
+            background: #e6f0ff;
+            padding: 12px;
+            border-radius: 16px;
+            margin: 16px 0;
+        }
+        
+        .modal-resultado p {
+            margin: 8px 0;
+            font-size: 1rem;
+        }
+        
+        .modal-resultado .modal-valor {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #1e3a8a;
+        }
+        
+        .btn-aceptar {
+            background: #1e3a8a;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 40px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 8px;
+        }
+        
+        .btn-aceptar:hover {
+            background: #2e4a9e;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Pantalla de carga -->
+<div id="splashScreen" class="splash-screen">
+    <div class="splash-contenido">
+        <div class="splash-texto-container">
+            <div class="splash-texto">Creado por Safety</div>
+        </div>
+        <div class="splash-logo">
+            <img src="logo.png" alt="Safety Logo" style="width: 100%; height: 100%; object-fit: contain;">
+        </div>
+        <div class="splash-cargando"></div>
+    </div>
+</div>
+
+<!-- Contenido principal de la app -->
+<div id="mainApp" class="container">
+    <h1>🚛 Calculadora de Seguridad</h1>
+
+    <label>🔢 Capacidad del montacargas (toneladas):</label>
+    <input type="text" id="capacidad" placeholder="0" value="">
+
+    <label>⚖️ Peso de la máquina (toneladas):</label>
+    <input type="text" id="pesoMaquina" placeholder="0" value="">
+
+    <label>📏 Largo total (montacargas + máquina) en metros:</label>
+    <input type="text" id="largoTotal" placeholder="0" value="">
+
+    <label>🪵 Superficie de apoyo de la máquina:</label>
+    <select id="superficieApoyo">
+        <option value="madera">Tarima de madera</option>
+        <option value="metal">Tarima de metal</option>
+    </select>
+
+    <label>🐢 ¿La máquina va sobre tortugas mecánicas?</label>
+    <select id="tortugas">
+        <option value="si">Sí</option>
+        <option value="no">No</option>
+    </select>
+
+    <label>🛣️ Tipo de piso para frenado:</label>
+    <select id="piso">
+        <option value="seco">Concreto seco</option>
+        <option value="mojado">Concreto mojado</option>
+        <option value="grava">Grava</option>
+    </select>
+
+    <button id="calcular">🔧 Calcular</button>
+
+    <div class="resultado" id="resultadoDiv">
+        <div class="card">
+            <h3>🛑 Distancia de frenado</h3>
+            <div id="distFrenado" class="valor-inicial">---</div>
+        </div>
+        <div class="card">
+            <h3>🔄 Distancia de frenado al girar</h3>
+            <div id="anguloGiro" class="valor-inicial">---</div>
+            <div id="desplazamientoExtremo" class="valor-inicial">---</div>
+        </div>
+    </div>
+
+    <footer>App para montacargas · El desplazamiento del extremo = largo total × ángulo</footer>
+    <div class="nota">Ángulo = distancia frenado / radio del vértice (según capacidad)</div>
+</div>
+
+<div id="modalResultados" class="modal">
+    <div class="modal-contenido">
+        <h3>🚛 Resultados</h3>
+        <div class="modal-resultado">
+            <p>🛑 Distancia de frenado</p>
+            <p class="modal-valor" id="modalDistFrenado">---</p>
+        </div>
+        <div class="modal-resultado">
+            <p>🔄 Distancia de frenado al girar</p>
+            <p class="modal-valor" id="modalDesplazamiento">---</p>
+            <p id="modalAngulo" style="font-size: 0.85rem; color: #666;">---</p>
+        </div>
+        <button class="btn-aceptar" id="btnAceptar">Aceptar</button>
+    </div>
+</div>
+
+<script>
+    // Pantalla de carga - 4.5 segundos
+    setTimeout(function() {
+        const splashScreen = document.getElementById("splashScreen");
+        const mainApp = document.getElementById("mainApp");
+        splashScreen.style.opacity = "0";
+        mainApp.classList.add("visible");
+        setTimeout(function() {
+            splashScreen.style.display = "none";
+        }, 500);
+    }, 4500);
+    
+    // Manejo de campos
+    function obtenerValorInput(elemento) {
+        let valor = elemento.value.trim();
+        if (valor === "") return 0;
+        return parseFloat(valor);
+    }
+    
+    const capacidadInput = document.getElementById("capacidad");
+    const pesoInput = document.getElementById("pesoMaquina");
+    const largoInput = document.getElementById("largoTotal");
+    
+    function seleccionarTexto(event) {
+        event.target.select();
+    }
+    
+    capacidadInput.addEventListener("focus", seleccionarTexto);
+    pesoInput.addEventListener("focus", seleccionarTexto);
+    largoInput.addEventListener("focus", seleccionarTexto);
+    
+    const DISTANCIA_BASE_REFERENCIA = 0.25;
+    
+    const factorPorCapacidad = {
+        "30-40": 1.0,
+        "20-29": 0.9,
+        "15-28": 0.85,
+        "3-14": 0.75,
+        "default": 0.7
+    };
+    
+    const factorPorSuperficie = {
+        "madera": 1.0,
+        "metal": 1.18
+    };
+    
+    const factorPorTortugas = {
+        "si": 1.22,
+        "no": 1.0
+    };
+    
+    const factorPorPiso = {
+        "seco": 1.0,
+        "mojado": 1.45,
+        "grava": 1.35
+    };
+    
+    const PESO_REFERENCIA = 12;
+    const LARGO_REFERENCIA = 15;
+    
+    function obtenerRadioVertice(capacidad) {
+        if (capacidad >= 30 && capacidad <= 40) return 2.5;
+        if (capacidad >= 20 && capacidad <= 29) return 1.8;
+        if (capacidad >= 15 && capacidad <= 28) return 1.5;
+        if (capacidad >= 3 && capacidad <= 14) return 1.2;
+        return 1.5;
+    }
+    
+    function getRangoCapacidad(capacidad) {
+        if (capacidad >= 30 && capacidad <= 40) return "30-40";
+        if (capacidad >= 20 && capacidad <= 29) return "20-29";
+        if (capacidad >= 15 && capacidad <= 28) return "15-28";
+        if (capacidad >= 3 && capacidad <= 14) return "3-14";
+        return "default";
+    }
+    
+    function calcularDistanciaFrenado(capacidad, pesoMaquina, largoTotal, superficie, tortugas, piso) {
+        let factorPeso = Math.pow(pesoMaquina / PESO_REFERENCIA, 0.55);
+        let factorLargo = Math.pow(largoTotal / LARGO_REFERENCIA, 0.28);
+        let rangoCap = getRangoCapacidad(capacidad);
+        let factorCap = factorPorCapacidad[rangoCap];
+        let factorSup = factorPorSuperficie[superficie];
+        let factorTor = factorPorTortugas[tortugas];
+        let factorPis = factorPorPiso[piso];
+        
+        let distancia = DISTANCIA_BASE_REFERENCIA * factorPeso * factorLargo * factorCap * factorSup * factorTor * factorPis;
+        
+        if (distancia < 0.03) distancia = 0.03;
+        if (distancia > 1.8) distancia = 1.8;
+        
+        return distancia;
+    }
+    
+    function formatearDistancia(valor) {
+        if (valor < 0.1) {
+            return `${(valor * 100).toFixed(1)} centímetros`;
+        } else if (valor < 1) {
+            return `${(valor * 100).toFixed(0)} centímetros`;
+        } else {
+            return `${valor.toFixed(2)} metros`;
+        }
+    }
+    
+    let ultimosResultados = {
+        distanciaFrenado: 0,
+        anguloGrados: 0,
+        desplazamientoExtremo: 0
+    };
+    
+    function mostrarResultados() {
+        const capacidad = obtenerValorInput(capacidadInput);
+        const pesoMaquina = obtenerValorInput(pesoInput);
+        const largoTotal = obtenerValorInput(largoInput);
+        const superficie = document.getElementById("superficieApoyo").value;
+        const tortugas = document.getElementById("tortugas").value;
+        const piso = document.getElementById("piso").value;
+        
+        if (isNaN(capacidad) || capacidad <= 0) {
+            alert("❌ Por favor ingresa una capacidad válida (mayor a 0 toneladas)");
+            return;
+        }
+        if (isNaN(pesoMaquina) || pesoMaquina <= 0) {
+            alert("❌ Por favor ingresa un peso válido (mayor a 0 toneladas)");
+            return;
+        }
+        if (isNaN(largoTotal) || largoTotal <= 0) {
+            alert("❌ Por favor ingresa un largo total válido (mayor a 0 metros)");
+            return;
+        }
+        
+        if (pesoMaquina > capacidad) {
+            alert("⚠️ ADVERTENCIA: El peso de la máquina excede la capacidad del montacargas");
+        }
+        
+        const distanciaFrenado = calcularDistanciaFrenado(capacidad, pesoMaquina, largoTotal, superficie, tortugas, piso);
+        const radioVertice = obtenerRadioVertice(capacidad);
+        const anguloRad = distanciaFrenado / radioVertice;
+        const anguloGrados = (anguloRad * 180 / Math.PI).toFixed(2);
+        const desplazamientoExtremo = largoTotal * anguloRad;
+        
+        ultimosResultados = {
+            distanciaFrenado: distanciaFrenado,
+            anguloGrados: anguloGrados,
+            desplazamientoExtremo: desplazamientoExtremo
+        };
+        
+        const distFrenadoElem = document.getElementById("distFrenado");
+        const anguloGiroElem = document.getElementById("anguloGiro");
+        const desplazamientoElem = document.getElementById("desplazamientoExtremo");
+        
+        distFrenadoElem.className = "valor";
+        anguloGiroElem.className = "valor";
+        desplazamientoElem.className = "valor";
+        
+        distFrenadoElem.innerHTML = formatearDistancia(distanciaFrenado);
+        anguloGiroElem.innerHTML = `📐 Ángulo girado: ${anguloGrados}°`;
+        desplazamientoElem.innerHTML = `📍 Desplazamiento del extremo: ${formatearDistancia(desplazamientoExtremo)}`;
+        
+        mostrarModal();
+        
+        let advertencia = "";
+        if (desplazamientoExtremo > 5) {
+            advertencia = "<br><span class='advertencia'>⚠️ REQUIERE MUCHO ESPACIO - Precaución</span>";
+            desplazamientoElem.innerHTML += advertencia;
+        } else if (desplazamientoExtremo > 3.5) {
+            advertencia = "<br><span style='color:#f57c00;'>⚠️ Espacio amplio necesario</span>";
+            desplazamientoElem.innerHTML += advertencia;
+        }
+    }
+    
+    function mostrarModal() {
+        document.getElementById("modalDistFrenado").innerHTML = formatearDistancia(ultimosResultados.distanciaFrenado);
+        document.getElementById("modalDesplazamiento").innerHTML = formatearDistancia(ultimosResultados.desplazamientoExtremo);
+        document.getElementById("modalAngulo").innerHTML = `📐 Ángulo girado: ${ultimosResultados.anguloGrados}°`;
+        document.getElementById("modalResultados").style.display = "block";
+    }
+    
+    function cerrarModal() {
+        document.getElementById("modalResultados").style.display = "none";
+    }
+    
+    document.getElementById("calcular").addEventListener("click", mostrarResultados);
+    document.getElementById("btnAceptar").addEventListener("click", cerrarModal);
+    
+    window.addEventListener("click", (event) => {
+        const modal = document.getElementById("modalResultados");
+        if (event.target === modal) {
+            cerrarModal();
+        }
+    });
+    
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js')
+            .then(() => console.log('✅ SW registrado'))
+            .catch(err => console.log('❌ SW error:', err));
+    }
+</script>
+</body>
+</html>
