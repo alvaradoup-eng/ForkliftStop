@@ -2,7 +2,7 @@
   "name": "Safety Montacargas",
   "short_name": "Safety",
   "description": "Calculadora de seguridad para montacargas",
-  "start_url": "/index.html",
+  "start_url": "/ForkliftStop/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#1e3a8a",
